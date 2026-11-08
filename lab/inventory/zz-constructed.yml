@@ -1,0 +1,18 @@
+# Groupes CALCULÉS à partir des variables d'hôtes et des facts en cache.
+# Le nom "zz-" garantit qu'il est lu APRÈS hosts.yml (ordre alphabétique).
+# Prérequis : fact_caching activé (ansible.cfg) + un premier "ansible all -m setup".
+plugin: ansible.builtin.constructed
+strict: false                # hôte sans facts en cache -> ignoré, pas d'erreur
+use_vars_plugins: true       # rend group_vars/ visibles (app_runtime…)
+
+keyed_groups:
+  # os_bookworm, os_trixie…
+  - key: ansible_distribution_release
+    prefix: os
+  # runtime_php, runtime_nodejs (variable issue de group_vars/)
+  - key: app_runtime
+    prefix: runtime
+
+groups:
+  # groupe conditionnel : expression Jinja2 vraie -> l'hôte est membre
+  debian_oldstable: ansible_distribution_major_version is defined and ansible_distribution_major_version | int < 13

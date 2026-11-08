@@ -1,0 +1,19 @@
+---
+marp: true
+paginate: true
+---
+
+# Diagnostic CVE — {{ now(utc=true).strftime('%Y-%m-%d') }}
+
+{% for runtime, b in security_baseline.items() %}
+- **{{ runtime }}** : {{ b.advisory }} ({{ b.published }})
+{% endfor %}
+
+| Serveur | Runtime | Version | Corrigé en | Dernière | Fin de vie | Mitigation | Statut |
+|---|---|---|---|---|---|---|---|
+{% for h in report_hosts | sort %}
+{% set hv = hostvars[h] %}
+| {{ h }} | {{ hv.app_runtime }} | {{ hv.app_version }} | {{ hv.cve_fixed_in }} | {{ hv.cve_latest }} | {{ hv.cve_eol }} | {{ hv.cve_mitigation }} | {{ {'OK': '✅ OK', 'VULNERABLE': '⚠️ VULNÉRABLE', 'EOL': '⛔ EOL'}[hv.cve_status] }} |
+{% endfor %}
+
+**{{ vulnerable | length }}/{{ report_hosts | length }}** serveurs à traiter : {{ vulnerable | join(', ') }}

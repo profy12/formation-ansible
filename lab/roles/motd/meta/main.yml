@@ -1,0 +1,6 @@
+galaxy_info:
+  author: formation
+  description: Déploie /etc/motd
+  license: MIT
+  min_ansible_version: "2.15"
+dependencies: []

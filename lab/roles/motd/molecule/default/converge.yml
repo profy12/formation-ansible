@@ -1,0 +1,8 @@
+- name: Converge
+  hosts: all
+  vars:
+    app_env: test        # fourni par l'inventaire dans le lab
+  tasks:
+    - name: Appliquer le rôle testé
+      ansible.builtin.include_role:
+        name: motd

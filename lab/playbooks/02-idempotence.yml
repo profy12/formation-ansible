@@ -1,0 +1,36 @@
+# Idempotence : lancer 2 fois et comparer les "changed".
+#   ansible-playbook playbooks/02-idempotence.yml -l web1
+#   ansible-playbook playbooks/02-idempotence.yml -l web1 --check --diff
+- name: Idempotence — le bon et le mauvais
+  hosts: all
+  become: true
+
+  tasks:
+    - name: "NON idempotent : shell + echo >> (ajoute une ligne à chaque run)"
+      ansible.builtin.shell: echo "max_connections=200" >> /opt/app/bad.conf  # noqa: no-changed-when
+      tags: bad
+
+    - name: "Idempotent : lineinfile garantit un ÉTAT"
+      ansible.builtin.lineinfile:
+        path: /opt/app/good.conf
+        line: max_connections=200
+        create: true
+        mode: "0644"
+      tags: good
+
+    - name: "Idempotent : command + creates (la tâche est sautée si le fichier existe)"
+      ansible.builtin.command: dd if=/dev/urandom of=/opt/app/secret.key bs=32 count=1
+      args:
+        creates: /opt/app/secret.key
+      tags: good
+
+    - name: "Lecture seule : changed_when false"
+      ansible.builtin.command: wc -l /opt/app/bad.conf
+      register: bad_lines
+      changed_when: false
+      tags: bad
+
+    - name: Constat
+      ansible.builtin.debug:
+        msg: "bad.conf contient {{ bad_lines.stdout.split()[0] }} ligne(s)"
+      tags: bad

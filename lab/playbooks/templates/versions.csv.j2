@@ -1,0 +1,5 @@
+host;env;os;runtime;version;branch;openssl_system
+{% for h in report_hosts | sort %}
+{% set hv = hostvars[h] %}
+{{ h }};{{ hv.app_env }};{{ hv.ansible_facts.distribution }} {{ hv.ansible_facts.distribution_version }};{{ hv.app_runtime }};{{ hv.app_version }};{{ hv.app_branch }};{{ hv.openssl_version }}
+{% endfor %}

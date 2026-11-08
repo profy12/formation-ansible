@@ -1,0 +1,16 @@
+- name: Lire la version du runtime applicatif
+  ansible.builtin.command: "{{ app_version_cmd }}"
+  register: _version
+  changed_when: false          # une lecture ne modifie rien -> jamais "changed"
+
+- name: Lire la version d'OpenSSL
+  ansible.builtin.command: openssl version
+  register: _openssl
+  changed_when: false
+  failed_when: false
+
+- name: Exposer les versions sous forme de facts
+  ansible.builtin.set_fact:
+    app_version: "{{ _version.stdout | trim }}"
+    app_branch: "{{ (_version.stdout | trim).split('.')[:app_branch_depth | int] | join('.') }}"
+    openssl_version: "{{ (_openssl.stdout | default('n/a')).split(' ')[1] | default('n/a') }}"

@@ -1,0 +1,20 @@
+# Référentiel sécurité — à mettre à jour à chaque bulletin.
+# Une branche absente de "fixed_in" = plus supportée = vulnérable par définition.
+security_baseline:
+  php:
+    advisory: "PHP2Shell : CVE-2026-109618 / CVE-2026-109619 — RCE, CVSS 9.2"
+    published: "2026-10-21"
+    url: https://www.php.net/archive/2026.php
+    fixed_in:
+      "8.2": "8.2.35"
+      "8.3": "8.3.36"
+      "8.4": "8.4.27"
+      "8.5": "8.5.12"
+  nodejs:
+    advisory: "Security releases oct. 2026 : 10 CVE dont 4 High (CVE-2026-111497 Brotli OOB write…)"
+    published: "2026-10-21"
+    url: https://nodejs.org/en/blog/vulnerability/october-2026-security-releases
+    fixed_in:
+      "22": "22.23.4"
+      "24": "24.22.1"
+      "26": "26.12.1"

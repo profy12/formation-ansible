@@ -1,0 +1,40 @@
+# Cas pratique 1 : inventaire des versions applicatives du parc.
+#   ansible-playbook playbooks/10-versions.yml
+#   -> reports/versions.md (rapport Markdown/Marp) + reports/versions.csv
+- name: Collecter les versions
+  hosts: web:api
+  gather_facts: true
+  gather_subset: [min]        # seulement l'essentiel : OS, distribution…
+  roles:
+    - app_versions
+
+- name: Consolider et présenter
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    report_hosts: "{{ groups['web'] + groups['api'] }}"
+  tasks:
+    - name: Créer le répertoire de rapports
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/../reports"
+        state: directory
+        mode: "0755"
+
+    - name: Générer les rapports
+      ansible.builtin.template:
+        src: "{{ item }}.j2"           # cherché dans playbooks/templates/
+        dest: "{{ playbook_dir }}/../reports/{{ item }}"
+        mode: "0644"
+      loop:
+        - versions.md
+        - versions.csv
+
+    - name: Afficher la synthèse par runtime
+      ansible.builtin.debug:
+        msg: >-
+          {{ item }} :
+          {{ report_hosts | map('extract', hostvars)
+             | selectattr('app_runtime', 'equalto', item)
+             | map(attribute='app_version') | unique | sort | join(', ') }}
+      loop: [php, nodejs]

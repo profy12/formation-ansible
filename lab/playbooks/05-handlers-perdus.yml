@@ -1,0 +1,33 @@
+# Handlers perdus : une notification n'est traitée qu'en fin de section.
+# Si l'hôte échoue avant, elle est perdue... et le run suivant ne la refait pas.
+#   1) ansible-playbook playbooks/05-handlers-perdus.yml                         -> conf modifiée, échec, pas de redémarrage
+#   2) ansible-playbook playbooks/05-handlers-perdus.yml -e simulate_failure=false -> changed=0, redémarrage jamais fait
+#   3) ansible-playbook playbooks/05-handlers-perdus.yml -e app_port=8082 --force-handlers
+- name: Handlers perdus après un échec
+  hosts: web1
+  become: true
+  vars:
+    app_port: 8081
+    simulate_failure: true
+
+  tasks:
+    - name: Configurer l'application
+      ansible.builtin.copy:
+        dest: /opt/app/app.conf
+        content: "port={{ app_port }}\n"
+        mode: "0644"
+      notify: Redémarrer l'application
+
+    # Remède possible : traiter les notifications AVANT l'étape risquée
+    # - name: Appliquer les redémarrages en attente
+    #   ansible.builtin.meta: flush_handlers
+
+    - name: Migrer la base de données
+      ansible.builtin.command: /bin/false   # simule un échec
+      changed_when: false
+      when: simulate_failure | bool
+
+  handlers:
+    - name: Redémarrer l'application
+      ansible.builtin.shell: echo "$(date -Is) redémarrage, port={{ app_port }}" >> /opt/app/restarts.log
+      changed_when: true

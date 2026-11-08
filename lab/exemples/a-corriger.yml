@@ -1,0 +1,27 @@
+# Exemple volontairement fautif pour la démo ansible-lint (hors playbooks/ : non linté par lab:lint)
+#   ansible-lint exemples/a-corriger.yml
+- name: Déployer l'application
+  hosts: web
+  become: true
+  tasks:
+    - name: Lire la version de PHP
+      ansible.builtin.command: php -v
+      register: php_v
+
+    - name: Déployer la conf
+      ansible.builtin.template:
+        src: app.conf.j2
+        dest: /etc/app.conf
+        mode: "0644"
+      register: conf
+
+    - name: Redémarrer si la conf a changé
+      ansible.builtin.service:
+        name: app
+        state: restarted
+      when: conf.changed
+
+    - name: Installer jq
+      apt:
+        name: jq
+        state: latest

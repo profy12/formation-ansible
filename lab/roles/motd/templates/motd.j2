@@ -1,0 +1,5 @@
+{{ ansible_managed | comment }}
+  Serveur  : {{ inventory_hostname }} ({{ app_env }})
+  Système  : {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+  Runtime  : {{ app_runtime | default('n/a') }}
+  Contact  : {{ motd_team }} <{{ motd_contact }}>

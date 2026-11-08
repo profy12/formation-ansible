@@ -1,0 +1,158 @@
+/* @theme formation */
+@import 'default';
+
+:root {
+  --ink: #1e293b;
+  --muted: #64748b;
+  --accent: #0f766e;
+  --accent-soft: #ccfbf1;
+  --warn: #b91c1c;
+  --warn-soft: #fee2e2;
+  --code-bg: #0f172a;
+}
+
+section {
+  font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 26px;
+  color: var(--ink);
+  padding: 50px 70px;
+  justify-content: flex-start;
+}
+
+h1 {
+  color: var(--accent);
+  font-size: 1.6em;
+  border-bottom: 3px solid var(--accent-soft);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.5em;
+}
+
+h2 { color: var(--ink); font-size: 1.15em; }
+h3 { color: var(--accent); font-size: 1em; margin: 0.4em 0 0.2em; }
+
+strong { color: var(--accent); }
+em { color: var(--muted); }
+a { color: var(--accent); }
+
+ul, ol { margin: 0.3em 0; }
+li { margin: 0.15em 0; }
+
+code {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-radius: 4px;
+  padding: 0 0.25em;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--code-bg);
+  border-radius: 8px;
+  font-size: 0.68em;
+  line-height: 1.35;
+  padding: 0.7em 1em;
+  margin: 0.4em 0;
+}
+pre code { background: transparent; color: #e2e8f0; padding: 0; }
+
+table { font-size: 0.72em; border-collapse: collapse; margin: 0.4em 0; }
+th { background: var(--accent); color: #fff; }
+th, td { padding: 0.3em 0.7em; border: 1px solid #cbd5e1; }
+tr:nth-child(even) td { background: #f8fafc; }
+
+blockquote {
+  border-left: 6px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+  padding: 0.4em 0.9em;
+  margin: 0.5em 0;
+  font-size: 0.9em;
+}
+
+header, footer { color: var(--muted); font-size: 0.55em; }
+section::after { color: var(--muted); font-size: 0.55em; }
+
+/* --- Titre / sections --- */
+section.lead {
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #134e4a 100%);
+  color: #f8fafc;
+}
+section.lead h1 { color: #fff; border: none; font-size: 2.1em; }
+section.lead h2, section.lead p { color: #99f6e4; }
+section.lead strong { color: #5eead4; }
+section.lead::after, section.lead footer, section.lead header { color: #94a3b8; }
+
+/* --- Utilitaires --- */
+section.small { font-size: 22px; }
+section.tiny  { font-size: 19px; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; align-items: start; }
+.cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1em; align-items: start; }
+
+.card {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.5em 0.8em;
+  background: #f8fafc;
+}
+.card.warn { border-color: var(--warn); background: var(--warn-soft); }
+
+.tag {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 0.6em;
+  font-size: 0.6em;
+  vertical-align: middle;
+}
+.tag.warn { background: var(--warn); }
+
+.demo::before {
+  content: '▶ DÉMO';
+  display: inline-block;
+  background: var(--warn);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.6em;
+  border-radius: 4px;
+  padding: 0.1em 0.5em;
+  margin-right: 0.5em;
+  vertical-align: middle;
+}
+.muted { color: var(--muted); }
+.center { text-align: center; }
+
+/* --- Coloration syntaxique lisible sur fond sombre (palette type GitHub Dark) --- */
+pre .hljs-comment, pre .hljs-quote { color: #8b949e; font-style: italic; }
+pre .hljs-keyword, pre .hljs-selector-tag, pre .hljs-literal,
+pre .hljs-built_in, pre .hljs-type { color: #ff7b72; }
+pre .hljs-string, pre .hljs-regexp, pre .hljs-addition { color: #a5d6ff; }
+pre .hljs-attr, pre .hljs-attribute, pre .hljs-property,
+pre .hljs-section, pre .hljs-title { color: #7ee787; }
+pre .hljs-number, pre .hljs-symbol, pre .hljs-bullet,
+pre .hljs-variable, pre .hljs-template-variable { color: #79c0ff; }
+pre .hljs-meta, pre .hljs-template-tag { color: #d2a8ff; }
+pre .hljs-name, pre .hljs-tag { color: #7ee787; }
+pre .hljs-deletion { color: #ffa198; }
+
+th strong, th em { color: #fff; }
+
+/* Petite photo ronde dans le texte (ex. : Stallman à côté de GPLv3) */
+img.avatar {
+  height: 1.5em;
+  width: 1.5em;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+/* Crédit photo discret, en bas à droite */
+.credit {
+  position: absolute;
+  right: 70px;
+  bottom: 22px;
+  font-size: 0.45em;
+  color: var(--muted);
+}

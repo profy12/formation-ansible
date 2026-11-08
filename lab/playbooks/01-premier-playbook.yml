@@ -1,0 +1,25 @@
+# Premier playbook : un play, des tâches, un rôle, un handler.
+#   ansible-playbook playbooks/01-premier-playbook.yml
+- name: Socle commun sur tous les serveurs
+  hosts: all
+  become: true
+
+  vars:
+    admin_user: deploy
+
+  tasks:
+    - name: Créer l'utilisateur d'exploitation
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        shell: /bin/bash
+
+    - name: Créer le répertoire applicatif
+      ansible.builtin.file:
+        path: /opt/app
+        state: directory
+        owner: "{{ admin_user }}"
+        mode: "0755"
+
+    - name: Déployer le motd via un rôle
+      ansible.builtin.include_role:
+        name: motd

@@ -1,0 +1,43 @@
+# Parc de démo : 3 serveurs PHP, 3 serveurs Node.js.
+# Les versions sont volontairement hétérogènes (à jour / en retard / EOL)
+# pour les cas pratiques "inventaire des versions" et "diagnostic CVE".
+name: ansible-lab
+
+x-target: &target
+  build:
+    context: .
+  init: true
+  command: ["sleep", "infinity"]
+
+services:
+  web1:
+    <<: *target
+    container_name: lab-web1
+    hostname: web1
+    build: { context: ., args: { BASE_IMAGE: "php:8.1-cli" } }      # branche EOL
+  web2:
+    <<: *target
+    container_name: lab-web2
+    hostname: web2
+    build: { context: ., args: { BASE_IMAGE: "php:8.3.20-cli" } }   # patch en retard
+  web3:
+    <<: *target
+    container_name: lab-web3
+    hostname: web3
+    build: { context: ., args: { BASE_IMAGE: "php:8.4-cli" } }      # à jour
+
+  api1:
+    <<: *target
+    container_name: lab-api1
+    hostname: api1
+    build: { context: ., args: { BASE_IMAGE: "node:20" } }          # branche EOL
+  api2:
+    <<: *target
+    container_name: lab-api2
+    hostname: api2
+    build: { context: ., args: { BASE_IMAGE: "node:22.12.0" } }     # patch en retard
+  api3:
+    <<: *target
+    container_name: lab-api3
+    hostname: api3
+    build: { context: ., args: { BASE_IMAGE: "node:24" } }          # à jour

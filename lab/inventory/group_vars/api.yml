@@ -1,0 +1,3 @@
+app_runtime: nodejs
+app_version_cmd: node -p process.versions.node
+app_branch_depth: 1          # 22.12.0 -> branche "22"

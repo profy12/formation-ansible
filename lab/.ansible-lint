@@ -1,0 +1,8 @@
+# Lab pédagogique : 02-idempotence.yml contient VOLONTAIREMENT une tâche non idempotente.
+exclude_paths:
+  - collections/
+  - reports/
+skip_list:
+  - var-naming[no-role-prefix]   # noms courts (app_version, cve_status…) pour la lisibilité des slides
+warn_list:
+  - jinja[spacing]

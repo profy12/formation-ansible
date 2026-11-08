@@ -1,0 +1,14 @@
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Lire le motd
+      ansible.builtin.slurp:
+        src: /etc/motd
+      register: motd
+
+    - name: Le motd contient le bandeau et le contact
+      ansible.builtin.assert:
+        that:
+          - "'géré par Ansible' in (motd.content | b64decode)"
+          - "'techops@example.com' in (motd.content | b64decode)"

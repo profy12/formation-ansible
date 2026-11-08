@@ -1,0 +1,5 @@
+# Un handler ne s'exécute qu'en fin de play, et seulement si une tâche l'a notifié
+# (typiquement : redémarrer un service après modification de sa conf).
+- name: Journaliser le changement de motd
+  ansible.builtin.shell: echo "$(date -Is) motd mis à jour par Ansible" >> /var/log/ansible-motd.log
+  changed_when: true

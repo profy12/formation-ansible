@@ -1,0 +1,3 @@
+motd_team: "Équipe Ops"
+motd_contact: "techops@example.com"
+ansible_managed: "Ce fichier est géré par Ansible. Ne pas modifier directement."

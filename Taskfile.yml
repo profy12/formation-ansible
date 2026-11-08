@@ -1,0 +1,233 @@
+# https://taskfile.dev
+#   task                 -> liste des tâches
+#   task pdf             -> dist/ansible.pdf
+#   task pdf MARP_ENGINE=docker   (si pas de Node/Chromium en local)
+version: "3"
+
+vars:
+  DECK: slides/ansible.md
+  DIST: dist
+  NAME: ansible
+  MARP_ENGINE: '{{.MARP_ENGINE | default "npx"}}'
+  MARP_NPX: npx --yes @marp-team/marp-cli@latest
+  MARP_DOCKER: >-
+    docker run --rm --init
+    -v "{{.ROOT_DIR}}:/home/marp/app"
+    -e MARP_USER="$(id -u):$(id -g)"
+    marpteam/marp-cli
+  # --no-stdin : sinon marp attend du Markdown sur stdin hors TTY (CI, scripts)
+  MARP: '{{if eq .MARP_ENGINE "docker"}}{{.MARP_DOCKER}}{{else}}{{.MARP_NPX}}{{end}} --no-stdin'
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  # ------------------------------------------------------------------ slides
+  pdf:
+    desc: Génère le support PDF (dist/ansible.pdf)
+    method: timestamp   # reconstruit si une source est plus récente que le PDF
+    sources: ["{{.DECK}}", slides/themes/*.css, slides/img/**/*]
+    generates: ["{{.DIST}}/{{.NAME}}.pdf"]
+    cmds:
+      - mkdir -p {{.DIST}}
+      - "{{.MARP}} {{.DECK}} --pdf -o {{.DIST}}/{{.NAME}}.pdf"
+
+  pdf:notes:
+    desc: PDF avec les notes du présentateur en annotations
+    cmds:
+      - mkdir -p {{.DIST}}
+      - "{{.MARP}} {{.DECK}} --pdf --pdf-notes -o {{.DIST}}/{{.NAME}}-notes.pdf"
+
+  html:
+    desc: Génère une version HTML autonome (dist/ansible.html)
+    cmds:
+      - mkdir -p {{.DIST}}
+      - "{{.MARP}} {{.DECK}} --html -o {{.DIST}}/{{.NAME}}.html"
+      - cp -r slides/img {{.DIST}}/   # images référencées en relatif
+
+  pptx:
+    desc: Génère une version PowerPoint (images, non éditable)
+    cmds:
+      - mkdir -p {{.DIST}}
+      - "{{.MARP}} {{.DECK}} --pptx -o {{.DIST}}/{{.NAME}}.pptx"
+
+  watch:
+    desc: Prévisualisation avec rechargement à chaud (http://localhost:8080)
+    cmds:
+      - "{{.MARP}} --server slides/"
+
+  build:
+    desc: Génère PDF + HTML
+    deps: [pdf, html]
+
+  clean:
+    desc: Supprime les fichiers générés
+    cmds:
+      - rm -rf {{.DIST}} lab/reports
+
+  # --------------------------------------------------------------------- lab
+  lab:deps:
+    desc: Installe les collections Ansible nécessaires au lab
+    dir: lab
+    cmds:
+      - ansible-galaxy collection install -r requirements.yml -p collections
+
+  lab:up:
+    desc: Démarre le parc de démo (6 conteneurs PHP / Node.js)
+    dir: lab
+    cmds:
+      - docker compose up -d --build
+      - docker compose ps
+
+  lab:down:
+    desc: Arrête et supprime le parc de démo
+    dir: lab
+    cmds:
+      - docker compose down --remove-orphans
+      - rm -rf .facts_cache
+
+  lab:reset:
+    desc: Repart d'un parc vierge
+    cmds:
+      - task: lab:down
+      - task: lab:up
+
+  lab:lint:
+    desc: Vérifie playbooks et rôles avec ansible-lint
+    dir: lab
+    cmds:
+      - ansible-lint playbooks/ roles/
+
+  # ------------------------------------------------------------------- démos
+  demo:inventory:
+    desc: "Démo inventaire : graphe des groupes"
+    dir: lab
+    cmds:
+      - ansible-inventory --graph
+      - ansible-inventory --host web2 --yaml
+
+  demo:ping:
+    desc: "Démo CLI : module ping"
+    dir: lab
+    cmds:
+      - ansible all -m ping -o
+
+  demo:setup:
+    desc: "Démo CLI : module setup (facts filtrés)"
+    dir: lab
+    cmds:
+      - ansible web1 -m setup -a 'filter=ansible_distribution*'
+
+  demo:adhoc:
+    desc: "Démo CLI : commandes ad hoc"
+    dir: lab
+    cmds:
+      - ansible web -a "php -v" -o
+      - ansible api -a "node -v" -o
+      - ansible 'prod:&api' -m shell -a 'uptime' -o
+
+  demo:keyed-groups:
+    desc: "Démo inventaire : keyed_groups (constructed + cache de facts)"
+    dir: lab
+    cmds:
+      - rm -rf .facts_cache
+      - echo "--- avant collecte des facts" && ansible os_bookworm --list-hosts
+      - ansible all -m setup -a 'gather_subset=min' -o > /dev/null
+      - echo "--- après collecte des facts" && ansible os_bookworm --list-hosts
+      - ansible os_bookworm -a "openssl version" -o
+
+  demo:group-by:
+    desc: "Démo : groupes calculés à l'exécution (group_by)"
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/04-group-by.yml
+
+  demo:playbook:
+    desc: Premier playbook (socle + rôle motd)
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/01-premier-playbook.yml
+
+  demo:idempotence:
+    desc: Idempotence (lancer 2 fois !)
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/02-idempotence.yml -l web1
+
+  demo:handlers:
+    desc: "Handlers perdus après un échec — CLI_ARGS : -e simulate_failure=false | --force-handlers"
+    dir: lab
+    ignore_error: true   # le 1er run échoue volontairement
+    cmds:
+      - ansible-playbook playbooks/05-handlers-perdus.yml {{.CLI_ARGS}}
+      - ansible web1 -m shell -a "cat /opt/app/restarts.log 2>/dev/null || echo 'aucun redémarrage'" -o
+
+  demo:handlers:reset:
+    desc: Remet la démo des handlers à zéro (web1)
+    dir: lab
+    cmds:
+      - ansible web1 -b -m file -a "path=/opt/app/app.conf state=absent" -o
+      - ansible web1 -b -m file -a "path=/opt/app/restarts.log state=absent" -o
+
+  demo:lint:
+    desc: "ansible-lint sur un playbook volontairement fautif"
+    dir: lab
+    ignore_error: true   # 4 erreurs attendues
+    cmds:
+      - ansible-lint exemples/a-corriger.yml
+
+  demo:molecule:
+    desc: "Molecule : teste le rôle motd (create, converge, idempotence, verify, destroy)"
+    dir: lab/roles/motd
+    cmds:
+      - molecule test
+
+  demo:rolling:
+    desc: Déploiement progressif (serial) — RELEASE=x.y.z
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/03-rolling-update.yml -e app_release={{.RELEASE | default "1.0.0"}}
+
+  demo:versions:
+    desc: "Cas pratique 1 : inventaire des versions -> lab/reports/"
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/10-versions.yml
+      - cat reports/versions.csv
+
+  demo:diag:
+    desc: "Cas pratique 2 : diagnostic ad hoc (versions + mitigation PHP2Shell)"
+    dir: lab
+    cmds:
+      - ansible web -a "php -r 'echo PHP_VERSION;'" -o
+      - ansible api -a "node -v" -o
+      - ansible web -m shell -a "php -i | grep session.upload_progress.enabled" -o
+
+  demo:mitigate:
+    desc: "Cas pratique 2 : mitigation ad hoc CVE-2026-109619 (web1, web2)"
+    dir: lab
+    cmds:
+      - >-
+        ansible 'web:!web3' -b -m copy
+        -a "dest=/usr/local/etc/php/conf.d/zz-cve-2026-109619.ini content='session.upload_progress.enabled = 0\n'" -o
+      - ansible web -m shell -a "php -i | grep session.upload_progress.enabled" -o
+
+  demo:cve:
+    desc: "Cas pratique 2 : diagnostic CVE PHP / Node.js -> lab/reports/cve.md"
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/20-cve-diag.yml {{.CLI_ARGS}}
+
+  demo:cve:deep:
+    desc: "Cas pratique 2 + is-my-node-vulnerable (accès npm requis)"
+    dir: lab
+    cmds:
+      - ansible-playbook playbooks/20-cve-diag.yml --tags all,deep
+
+  demo:reports:
+    desc: Rend les rapports générés par Ansible en HTML (Marp)
+    cmds:
+      - "{{.MARP}} lab/reports/versions.md -o {{.DIST}}/report-versions.html"
+      - "{{.MARP}} lab/reports/cve.md -o {{.DIST}}/report-cve.html"

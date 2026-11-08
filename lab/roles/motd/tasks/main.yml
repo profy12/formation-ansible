@@ -1,0 +1,8 @@
+- name: Déployer le message d'accueil
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Journaliser le changement de motd

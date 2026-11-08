@@ -1,0 +1,45 @@
+# Déploiement multiple : rolling update par lots.
+#   ansible-playbook playbooks/03-rolling-update.yml -e app_release=1.4.2
+- name: Déploiement progressif de l'application
+  hosts: prod
+  become: true
+  serial:                     # 1 serveur (canari), puis 50 %, puis le reste
+    - 1
+    - "50%"
+    - "100%"
+  max_fail_percentage: 0      # au moindre échec, on arrête les lots suivants
+  order: sorted
+
+  vars:
+    app_release: "1.0.0"
+
+  pre_tasks:
+    - name: Retirer le serveur du load balancer
+      ansible.builtin.debug:
+        msg: "LB: disable {{ inventory_hostname }}"
+      delegate_to: localhost  # exécuté sur le contrôleur, pour le compte de l'hôte
+
+  tasks:
+    - name: Déployer la release
+      ansible.builtin.copy:
+        dest: /opt/app/RELEASE
+        content: "{{ app_release }}\n"
+        mode: "0644"
+      notify: Redémarrer l'application
+
+    - name: Vérifier que la release est bien en place (healthcheck)
+      ansible.builtin.command: cat /opt/app/RELEASE
+      register: deployed
+      changed_when: false
+      failed_when: deployed.stdout != app_release
+
+  post_tasks:
+    - name: Remettre le serveur dans le load balancer
+      ansible.builtin.debug:
+        msg: "LB: enable {{ inventory_hostname }} ({{ app_release }})"
+      delegate_to: localhost
+
+  handlers:
+    - name: Redémarrer l'application
+      ansible.builtin.debug:
+        msg: "systemctl restart app (simulé)"

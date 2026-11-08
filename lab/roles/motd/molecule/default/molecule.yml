@@ -1,0 +1,13 @@
+# Test du rôle motd dans un conteneur jetable :   cd roles/motd && molecule test
+driver:
+  name: docker
+platforms:
+  - name: motd-debian
+    image: ansible-lab-web1:latest   # image du lab (task lab:up) : Debian + Python
+    pre_build_image: true
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..
+scenario:
+  test_sequence: [destroy, syntax, create, converge, idempotence, verify, destroy]

@@ -1,0 +1,3 @@
+collections:
+  - name: community.docker   # plugin de connexion "docker exec" utilisé par le lab
+  - name: ansible.posix      # callback profile_tasks

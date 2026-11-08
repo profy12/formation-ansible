@@ -1,0 +1,4 @@
+# Options communes à toutes les commandes marp (CLI, Docker, watch)
+allowLocalFiles: true
+html: true
+themeSet: slides/themes

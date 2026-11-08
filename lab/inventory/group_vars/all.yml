@@ -1,0 +1,6 @@
+# Le lab utilise "docker exec" au lieu de SSH : aucun agent, aucune clé à gérer.
+# En production on garderait la connexion par défaut (ssh) avec ansible_user, etc.
+ansible_connection: community.docker.docker
+ansible_python_interpreter: /usr/bin/python3
+
+app_env: "{{ 'prod' if inventory_hostname in groups['prod'] else 'staging' }}"

@@ -1,0 +1,25 @@
+---
+marp: true
+paginate: true
+---
+
+# Inventaire des versions applicatives
+
+Généré par Ansible le {{ now(utc=true).strftime('%Y-%m-%d %H:%M') }} UTC — {{ report_hosts | length }} serveurs
+
+| Serveur | Env | OS | Runtime | Version | OpenSSL (système) |
+|---|---|---|---|---|---|
+{% for h in report_hosts | sort %}
+{% set hv = hostvars[h] %}
+| {{ h }} | {{ hv.app_env }} | {{ hv.ansible_facts.distribution }} {{ hv.ansible_facts.distribution_version }} | {{ hv.app_runtime }} | **{{ hv.app_version }}** | {{ hv.openssl_version }} |
+{% endfor %}
+
+---
+
+# Répartition par branche
+
+{% for runtime in ['php', 'nodejs'] %}
+{% set hosts = report_hosts | map('extract', hostvars) | selectattr('app_runtime', 'equalto', runtime) | list %}
+- **{{ runtime }}** : {% for branch, members in hosts | groupby('app_branch') %}`{{ branch }}` × {{ members | length }}{{ ', ' if not loop.last }}{% endfor %}
+
+{% endfor %}

@@ -1,0 +1,18 @@
+# Groupes calculés à l'EXÉCUTION (sans cache de facts) avec group_by.
+#   ansible-playbook playbooks/04-group-by.yml
+- name: Classer les serveurs selon leurs facts
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Créer un groupe par version de Debian
+      ansible.builtin.group_by:
+        key: "release_{{ ansible_facts['distribution_release'] }}"
+      changed_when: false
+
+- name: Agir uniquement sur les Debian 12
+  hosts: release_bookworm
+  gather_facts: false
+  tasks:
+    - name: "Cibler les Debian 12 (ex. : correctif OpenSSL 3.0.x)"
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} : {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} → patch OpenSSL 3.0.x"

@@ -1,0 +1,4 @@
+# Référentiel : version minimale corrigée par branche (vars/security_baseline.yml)
+security_baseline: {}
+# Données "live" endoflife.date, récupérées une fois sur le contrôleur
+eol_data: {}
